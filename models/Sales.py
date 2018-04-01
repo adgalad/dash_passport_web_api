@@ -1,5 +1,6 @@
 from App import admin
 from models.db import db
+from models.Passport import Passport
 
 from flask_admin.contrib.sqla import ModelView
 
@@ -9,6 +10,7 @@ class Purchase(db.Model):
 	donation = db.Column(db.Boolean, default=False, nullable=False)
 	rrss = db.Column(db.Boolean, default=False, nullable=False)
 	passport_id = db.Column(db.Integer, db.ForeignKey('db_passport.id'))
+	passport = db.relation(Passport, backref='purchase')  
 
 class Vendor(db.Model):
 	__tablename__ = "db_vendor"

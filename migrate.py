@@ -2,6 +2,8 @@
 from models.db import db
 from models.User import *
 from models.Permission import *
+import models.Event
+import models.Sales
 
 
 if __name__ == '__main__':
