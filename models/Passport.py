@@ -14,7 +14,10 @@ class Passport(db.Model):
   recharged = db.Column(db.Boolean, default=False, nullable=False)
   user_id = db.Column(db.Integer, db.ForeignKey('db_user.id'))
   event_id = db.Column(db.Integer, db.ForeignKey('db_event.id'))
+  amount_recharged = db.Column(db.Float, default=0.0, nullable=True)
+  #recharged_by = db.Column(db.Integer, db.ForeignKey('db_user.id'), nullable=True)
   user = db.relation(User, backref='passport')  
   event = db.relation(Event, backref='passport')  
+  #recharger = db.relation(User, backref='passport')
 
 admin.add_view(ModelView(Passport, db.session))
