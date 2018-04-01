@@ -1,6 +1,4 @@
 
-import json
-from App import app, api, address
 from models.db import db
 from models.User import *
 from models.Permission import *
@@ -21,8 +19,5 @@ if __name__ == '__main__':
 
   for name, permissions in groups.items():
     db.session.add(Group(name = name, permissions = permissions))
-
-
-
 
   db.session.commit()

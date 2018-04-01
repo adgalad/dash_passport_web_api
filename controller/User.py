@@ -16,9 +16,6 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-
-
-
 # List Users
 class UserList(Resource):
   @jwt_belongsToGroup("Admin")

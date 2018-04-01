@@ -1,14 +1,15 @@
 
 from models.db import db
 from models.User import User
-from models.Permission import Group
+from models.Passport import Passport
 from controller.Language import *
 from controller.Permission import belongsToGroup, hasPermission, isCurrentUser, jwt_belongsToGroup
-from controller.Request import createUser, login
+from controller.Request import createPassport
 
 from flask_restful import Resource
 from App import app, api
 from flask_jwt_extended import jwt_required, get_jwt_identity
+
 
 
 
@@ -34,6 +35,7 @@ class PassportController(Resource):
 
   @jwt_required
   def put(self):
+    
     return { success: True }, 200
 
   @jwt_belongsToGroup("Admin")
@@ -41,7 +43,11 @@ class PassportController(Resource):
     return { success: True }, 200
 
   def post(self):
-   
+    json = createUser.parse_args()
+    user_id = json["user_id"]
+    passport = Passport(user_id = user_id)
+    db.session.add(passport)
+    db.session.commit()
     return { 'success': True }, 201
 
 
