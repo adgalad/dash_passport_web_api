@@ -1,5 +1,7 @@
 from App import admin
 from models.db import db
+from models.Passport import Passport
+from models.Event import Event
 
 from flask_admin.contrib.sqla import ModelView
 
@@ -9,6 +11,7 @@ class Purchase(db.Model):
 	donation = db.Column(db.Boolean, default=False, nullable=False)
 	rrss = db.Column(db.Boolean, default=False, nullable=False)
 	passport_id = db.Column(db.Integer, db.ForeignKey('db_passport.id'))
+	passport = db.relation(Passport, backref='purchase')
 
 class Vendor(db.Model):
 	__tablename__ = "db_vendor"
@@ -26,8 +29,8 @@ class BuysToVendor(db.Model):
 # La clave primaria de esta clase es compuesta
 class ParticipatesIn(db.Model):
 	__tablename__ = "db_participatesIn"
-	vendor_id = db.Column(db.Integer, db.ForeignKey('db_vendor.id', primary_key=True))
 	event_id = db.Column(db.Integer, db.ForeignKey('db_event.id'), primary_key=True)
+	vendor_id = db.Column(db.Integer, db.ForeignKey('db_vendor.id'), primary_key=True)
 
 admin.add_view(ModelView(Purchase, db.session))
 admin.add_view(ModelView(Vendor, db.session))
