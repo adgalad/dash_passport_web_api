@@ -1,7 +1,9 @@
 
-from App import app, api, address
+from App import app, address
 from models.db import db
 import models.Passport 
+import models.Event
+import models.Sales
 import controller.User
 
 
