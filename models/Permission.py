@@ -14,7 +14,7 @@ group_permission_table = db.Table('db_group_permission', db.Model.metadata,
 # This is the association table for the many-to-many relationship between
 # groups and members - this is, the memberships.
 user_group_table = db.Table('db_user_group', db.Model.metadata,
-  db.Column('user_id', db.Integer, db.ForeignKey('db_user.id', onupdate="CASCADE", ondelete="CASCADE"), primary_key=True),
+  db.Column( 'user_id', db.Integer, db.ForeignKey( 'db_user.id', onupdate="CASCADE", ondelete="CASCADE"), primary_key=True),
   db.Column('group_id', db.Integer, db.ForeignKey('db_group.id', onupdate="CASCADE", ondelete="CASCADE"), primary_key=True))
 
 
@@ -39,5 +39,3 @@ class Permission(db.Model):
     return '%r' % self.name
 
 
-admin.add_view(ModelView(Group, db.session))
-admin.add_view(ModelView(Permission, db.session))

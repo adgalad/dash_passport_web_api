@@ -1,0 +1,11 @@
+applications:
+- name: dashbackend
+  memory: 127M
+  timeout: 180
+# This is command provided by cf -c option  
+#  New Buildpack: https://developer.ibm.com/answers/questions/8782/about-deploying-python-applications/?community=bluemix
+#  buildpack: https://github.com/ephoning/heroku-buildpack-python.git
+#  buildpack: https://github.com/cloudfoundry/python-buildpack  # Use to work doesn't now
+  buildpack: python_buildpack
+  command: "bash run.sh"
+  path: .

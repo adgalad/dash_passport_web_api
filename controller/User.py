@@ -4,7 +4,7 @@ from models.User import User
 from models.Permission import Group
 from controller.Language import *
 from controller.Permission import belongsToGroup, hasPermission, isCurrentUser, jwt_belongsToGroup
-from controller.Request import createUser, login
+from controller.Request import createUser, login, modifyUser
 
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
@@ -14,6 +14,22 @@ from App import app, api, mail, host
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import time
+import threading
+
+class FuncThread(threading.Thread):
+  def __init__(self, target, *args):
+    thread = threading.Thread(target=target, args=args)
+    thread.daemon = True
+    thread.start()  
+
+def sendActivationEmail(user):
+  with app.app_context():
+    dump = { 'id': user.id, 'email': user.email, 'activation':True }
+    token = Serializer(app.config['JWT_SECRET_KEY']).dumps(dump).decode('ascii')
+    msg = Message(ActivateUserSubject, sender = 'smarticket.support', recipients = [user.email])
+    msg.html = "<a href='"+host+"/api/activate/user/"+token+"'>Activar</a>"
+    mail.send(msg)
 
 
 # List Users
@@ -46,11 +62,34 @@ class UserController(Resource):
 
   @jwt_required
   def put(self):
-    return { success: True }, 200
+    json = modifyUser.parse_args()
+    id = json["id"]
+    user = User.query.filter_by(id = id).first()
+
+    if json["email"]:
+      if User.query.filter_by(email = json["email"]).first() is None:
+        user.email = json["email"]
+        db.session.commit()
+        return { 'success': True, 'token': user.generate_auth_token() }, 200
+      else:
+        return { 'success': False, 'message': EmailAlreadyExists }, 200  
+
+    if json["password"]:
+      user.hash_password(json["password"])
+      db.session.commit()
+      return { 'success': True }, 200
+
+    if json["firstName"] and json["lastName"]:
+      user.firstName = json["firstName"]
+      user.lastName = json["lastName"]
+      db.session.commit()
+      return { 'success': True }, 200
+
+    return { 'success': False, 'message': BadUserPutRequest }, 200
 
   @jwt_belongsToGroup("Admin")
   def delete(self):
-    return { success: True }, 200
+    return { 'success': True }, 200
 
   def post(self):
     json = createUser.parse_args()
@@ -76,10 +115,11 @@ class UserController(Resource):
     db.session.add(user)
     group = Group.query.filter_by(name = "Participant").first()
     if group == None:
-      return {success: False, 'message':"Internal_Error: No default group found"}, 500
+      return {'success': False, 'message': "Internal_Error: No default group found"}, 500
     group.users.append(user)
+    t1 = FuncThread(sendActivationEmail, user)
+    # t1.start()
     db.session.commit()
-    sendActivationEmail(user)
     return { 'success': True }, 201
 
 
@@ -122,7 +162,8 @@ class UserActivate(Resource):
     elif user.active:
       return { "success": False, 'message': UserAlreadyActive }, 200
     else:
-      sendActivationEmail(user)
+      t1 = FuncThread(sendActivationEmail, user)
+      # t1.start()
       return { "success": True }, 200
 
 
@@ -154,19 +195,36 @@ class UserAuth(Resource):
                "firstName": user.firstName,
                "lastName": user.lastName,
                "id": user.id,
-               "permissions": permissions }
+               "permissions": permissions,
+               "vendor_id": user.vendor[0].id if user.vendor else None }
       return resp, 201
-      
+
+class UserEvents(Resource):
+  def get(self, id):
+    user = User.query.filter_by(id = id).first()
+    events = []
+    if user is None:
+      return {'success': False, 'message': UserDoesntExist }
+    for passport in user.passports:
+      e = passport.event
+      print(e)
+      date = int(time.mktime(e.date.timetuple()))
+      events.append({ "name": e.name,
+                      "id": e.id,
+                      "date": date,
+                      "active": e.active,
+                      "location": e.location,
+                      "duff_value": e.duff_value,
+                      "passport_id": passport.id
+                    })
+    return {'success': True, 'user_events': events }
+
 # Router
 api.add_resource(UserList, '/users')
 api.add_resource(UserController, '/user/<string:id>', '/user')
 api.add_resource(UserActivate, '/activate/user/<string:token>', '/activate/user')
 api.add_resource(UserAuth, '/auth/user')
+api.add_resource(UserEvents, '/user/<string:id>/events')
 
 
-def sendActivationEmail(user):
-  dump = { 'id': user.id, 'email': user.email, 'activation':True }
-  token = Serializer(app.config['JWT_SECRET_KEY']).dumps(dump).decode('ascii')
-  msg = Message(ActivateUserSubject, sender = 'smarticket.support', recipients = [user.email])
-  msg.html = "<a href='"+host+"/activate/user/"+token+"'>Activar</a>"
-  mail.send(msg)
+

@@ -5,6 +5,7 @@ from controller.Language import *
 
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+@jwt_required
 def belongsToGroup(groupName):
   currentUser = get_jwt_identity()
   groups = Group.query.filter_by(name = groupName)
@@ -13,7 +14,7 @@ def belongsToGroup(groupName):
       if member.id == currentUser["id"]:
         return True
   return False
-
+@jwt_required
 def hasPermission(permissionName):
   currentUser = get_jwt_identity()
   users = User.query.filter_by(id = currentUser['id'])
@@ -23,7 +24,7 @@ def hasPermission(permissionName):
         if permission.name == permissionName:
           return True
   return False
-
+@jwt_required
 def isCurrentUser(user):
   currentUser = get_jwt_identity()
   print(currentUser)

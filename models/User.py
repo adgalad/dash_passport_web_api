@@ -10,7 +10,7 @@ from flask_admin.contrib.sqla import ModelView
 
 class User(db.Model):
   __tablename__ = 'db_user'
-  id = db.Column(db.Integer, primary_key=True)
+  id = db.Column(db.Integer, autoincrement=True, primary_key=True)
   email = db.Column(db.String(128), unique=True, nullable=False)
   firstName = db.Column(db.String(32), nullable=False)
   lastName = db.Column(db.String(32), nullable=False)
@@ -35,6 +35,4 @@ class User(db.Model):
     return create_access_token(identity = identity, expires_delta=False)
 
 
-
-admin.add_view(ModelView(User, db.session))
 
